@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1073392412915",
+    "project_id": "markwolf",
+    "storage_bucket": "markwolf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1073392412915:android:1294c0249945c23c1cef86",
+        "android_client_info": {
+          "package_name": "com.markwolf.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1073392412915-0ittbq5d19lvabukq02gmt7dllt0276r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1twUVa0PrZiPDciuxLaaZKahQgl_Dxsw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1073392412915-0ittbq5d19lvabukq02gmt7dllt0276r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

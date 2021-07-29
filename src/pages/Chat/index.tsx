@@ -1,95 +1,166 @@
 /* eslint-disable prettier/prettier */
-import React from 'react';
-import {StyleSheet, View, Text, Image, ScrollView} from 'react-native';
-import {RectButton} from 'react-native-gesture-handler';
+import React, { useRef, useState } from 'react';
+import {StyleSheet, View, Text, Image, FlatList, ImageBackground, Alert} from 'react-native';
 import Logo from '../../assets/logo_mark_wolf.png';
-import ProfileImage from '../../assets/Hero_icon_frame_bg.png';
-import BorderImage from '../../assets/Hero_icon_frame.png';
+import BackgroundImage from '../../assets/little_background_frame.png';
+import { RootStateOrAny, useDispatch, useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { HttpAuth } from '../../config/connection';
+import socketio from 'socket.io-client';
+import { findMessage, finishConnection, updated } from '../../store/action/message.action';
+import { CardChat } from '../../components/CardChat';
 import { useNavigation } from '@react-navigation/native';
+import {LocalNotification} from '../../services/notification';
+
+interface MessageProps{
+    text: string;
+    user_id: string;
+    to_id: string;
+}
+
+interface PropsChat{
+    id: string;
+    messages: Array<MessageProps>,
+    room_id: string;
+    user_id: string;
+    lastMessageView: boolean;
+    client_finished: boolean;
+    user: string;
+}
 
 export const Chat = () => {
+    const [request, setRequest] = useState<PropsChat[]>([]);
+
+    const dispatch = useDispatch();
+    const {person} = useSelector((state: RootStateOrAny) => state.AuthReducer);
+    const {messages} = useSelector((state: RootStateOrAny) => state.MessageReducer);
 
     const navigation = useNavigation();
-    const fakeData = [
-        {
-            id: '3930_f0333',
-            name: 'Wallace',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-        {
-            id: '3930_f0333',
-            name: 'Lívia',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-        {
-            id: '3930_f0333',
-            name: 'Bruno',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-        {
-            id: '3930_f0333',
-            name: 'Marquinho',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-        {
-            id: '3930_f0333',
-            name: 'Marquinho',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-        {
-            id: '3930_f0333',
-            name: 'Marquinho',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-        {
-            id: '3930_f0333',
-            name: 'Marquinho',
-            last_message: 'Olá, Gostaria de saber o valor da sprite',
-        },
-    ];
+    const socket = useRef();
+
+    useEffect(() => {
+        console.log(person);
+        console.log(JSON.stringify(AsyncStorage.getItem('@access_token:token')));
+    }, [person]);
+
+    //Receber todas as conversas ao entrar
+    useEffect(() => {
+        dispatch(findMessage());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    //Conexão e recebimento das novas mensagens
+    useEffect(() => {
+        (socket as any).current = socketio('http://172.24.48.1:3002', {transports: ['websocket']});
+
+        (socket as any).current.on('new.join', (data: any, notification: any) => {
+            LocalNotification(notification.user, notification.message);
+            HttpAuth.get('message_admin').then(res => {
+                if (!res.data.error){
+                    setRequest(res.data);
+                    dispatch(updated(res.data));
+                }
+            });
+        });
+        (socket as any).current.on('updated.message.admin', (data: any) => {
+            setRequest(data);
+            dispatch(updated(data));
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    //Receber e atualizar as conversas
+    useEffect(() => {
+        (socket as any).current.on('client.send.message', (notification: any) => {
+            console.log(notification);
+            if (notification.message.user_id !== person.id){
+                LocalNotification(notification.user, notification.message.text);
+            }
+        });
+        (socket as any).current.on('receive.message.admin', () => {
+            HttpAuth.get('message_admin').then(res => {
+                if (!res.data.error){
+                    setRequest(res.data);
+                    dispatch(updated(res.data));
+                }
+            });
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    //Guardar as conversas
+    useEffect(() => {
+        setRequest(messages);
+    }, [messages]);
+
+    const handleRemove = (id: string, user: string) => {
+        Alert.alert('Remover', `Deseja remover a conversa de ${user} ?`, [
+            {
+                text: 'Não',
+                style: 'cancel',
+            },
+            {
+                text: 'Sim',
+                onPress: async() => {
+                    try {
+                        await dispatch(finishConnection(id));
+                        navigation.navigate('Chat');
+                    } catch (error) {
+                        Alert.alert('Não foi possível remover.');
+                    }
+                },
+            },
+        ]);
+    };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground  resizeMode="cover" source={BackgroundImage} style={styles.container}>
         <View style={styles.header}>
-            <Text style={styles.textHeader}>Bem vindo MarkWolf</Text>
+            <Text style={styles.textHeader}>Bem vindo {person.name}</Text>
             <Image source={Logo} resizeMode="contain" style={styles.image} />
         </View>
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-            {fakeData.map((item: any, index: number) => {
-                return (
-                    <RectButton onPress={() => navigation.navigate('Speaking', item)} key={index} style={styles.chat}>
-                        <View style={styles.profile}>
-                            <Image style={styles.borderImage} source={BorderImage} />
-                            <Image style={styles.profileImage} source={ProfileImage} />
-                            <Image style={styles.logo} source={Logo} />
-                        </View>
-                        <View style={styles.info}>
-                            <Text style={styles.textName}>{item.name}</Text>
-                            <Text numberOfLines={1} ellipsizeMode="tail" style={styles.textMessage}>{item.last_message}</Text>
-                        </View>
-                    </RectButton>
-                );
-            })}
-        </ScrollView>
-    </View>
+
+        <View style={styles.flatList}>
+            <FlatList 
+                data={request}
+                keyExtractor={({id}: any) => id}
+                style={styles.flatList}
+                renderItem={({item, index}: any) => (
+                    <CardChat
+                        handleRemove={handleRemove}
+                        item={item}
+                        index={index}
+                        request={request}
+                        key={index}
+                    />
+                )}
+                    showsVerticalScrollIndicator={false}
+            />
+        </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
     container: {
-        width: '100%',
+        // width: '100%',
         height: '100%',
-        backgroundColor: '#070116',
+        backgroundColor: '#0e0401',
     },
     header: {
         width: '100%',
-        height: 100,
+        height: 120,
         paddingVertical: 20,
         paddingHorizontal: 20,
         flexDirection: 'row',
         alignItems: 'center',
 
         justifyContent: 'space-between',
+    },
+    flatList: {
+        marginTop: 0,
+        paddingHorizontal: 0,
     },
     image: {
         width: 70,
@@ -109,43 +180,57 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 130,
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         alignItems: 'center',
+        paddingHorizontal: 30,
     },
     profile: {
     },
     borderImage: {
-        width: 90,
-        height: 90,
+        width: 70,
+        height: 70,
         zIndex: 2,
     },
     profileImage: {
-        width: 80,
-        height: 80,
+        width: 60,
+        height: 60,
         position: 'absolute',
         left: 5,
         top: 4,
         zIndex: 1,
     },
     logo: {
-        width: 60,
-        height: 60,
+        width: 50,
+        height: 50,
         position: 'absolute',
-        left: 13,
-        top: 16,
+        left: 8,
+        top: 12,
     },
-    info: {},
+    info: {
+        paddingRight: 60,
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+    },
     textName: {
-        fontSize: 25,
+        fontSize: 21,
         color: '#e6a502',
-        fontFamily: 'Ubuntu-Bold',
+        fontFamily: 'Ubuntu-Medium',
         marginLeft: 20,
     },
     textMessage: {
-        fontSize: 20,
+        fontSize: 18,
         color: '#fff',
-        fontFamily: 'Ubuntu-Bold',
+        fontFamily: 'Ubuntu-Regular',
         marginLeft: 20,
         overflow: 'hidden',
+    },
+    line: {
+        width: '100%',
+        alignSelf: 'flex-end',
+        borderBottomWidth: 0.2,
+        borderColor: '#fff',
+        // marginTop: 20,
+        marginVertical: 0,
     },
 });
