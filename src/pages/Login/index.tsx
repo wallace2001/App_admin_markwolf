@@ -1,32 +1,31 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 import { useNavigation } from '@react-navigation/native';
-import React, {useState} from 'react';
-import {View, StyleSheet, Text, TextInput} from 'react-native';
+import React from 'react';
+import {View, StyleSheet, Text, TextInput, TouchableOpacity} from 'react-native';
 import { RootStateOrAny, useDispatch, useSelector } from 'react-redux';
-import {RectButton} from 'react-native-gesture-handler';
+import { useForm, Controller } from 'react-hook-form';
 import { authorization } from '../../store/action/auth.action';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 export const Login = () => {
-    const [email, setEmail] = useState<string>('');
-    const [password, setPassword] = useState<string>('');
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const {person, error} = useSelector((state: RootStateOrAny) => state.AuthReducer);
     const {open} = useSelector((state: RootStateOrAny) => state.LoadingReducer);
 
-    const handleClickLogin = async() => {
-        const data = {
-            email,
-            password,
+    const { control, handleSubmit, formState: { errors } } = useForm();
+
+    const onSubmit = async(data: any) => {
+        const config = {
+            email: data.email,
+            password: data.password,
         };
-        await dispatch(authorization(data));
+        await dispatch(authorization(config));
         if (person?.ok){
             navigation.navigate('Chat');
         }
     };
-
   return (
     <View style={styles.container}>
         <Text style={styles.title}>Login</Text>
@@ -37,25 +36,51 @@ export const Login = () => {
             </View>
             <View style={styles.contentInput}>
                 <Text style={styles.textInput}>E-mail</Text>
-                <TextInput
-                    placeholderTextColor="#ccc"
-                    placeholder="Digite seu e-mail"
-                    style={styles.input}
-                    onChangeText={(e: any) => setEmail(e)}
+                <Controller
+                    control={control}
+                    rules={{
+                    required: true,
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                        style={styles.input}
+                        onBlur={onBlur}
+                        placeholder="Digite seu e-mail"
+                        keyboardType="email-address"
+                        onChangeText={onChange}
+                        value={value}
+                    />
+                    )}
+                    name="email"
+                    defaultValue=""
                 />
+                {errors.email && <Text style={styles.wrongText}>E-mail inválido</Text>}
             </View>
             <View style={styles.contentInput}>
                 <Text style={styles.textInput}>Password</Text>
-                <TextInput
-                    placeholderTextColor="#ccc"
-                    placeholder="Digite sua senha"
-                    style={styles.input}
-                    onChangeText={(e: any) => setPassword(e)}
+                <Controller
+                    control={control}
+                    rules={{
+                    required: true,
+                    }}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                        style={styles.input}
+                        onBlur={onBlur}
+                        placeholder="Digite sua senha"
+                        secureTextEntry={true}
+                        onChangeText={onChange}
+                        value={value}
+                    />
+                    )}
+                    name="password"
+                    defaultValue=""
                 />
+                {errors.password && <Text style={styles.wrongText}>Senha inválida</Text>}
             </View>
-            <RectButton onPress={handleClickLogin} style={open ? styles.disabledButton : styles.button}>
+            <TouchableOpacity onPress={handleSubmit(onSubmit)} style={open ? styles.disabledButton : styles.button}>
                 <Text style={styles.textButton}>Entrar</Text>
-            </RectButton>
+            </TouchableOpacity>
         </View>
     </View>
   );
@@ -145,5 +170,9 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: '#fff',
         marginLeft: 20,
+    },
+    wrongText: {
+        color: '#ff0000',
+        fontSize: 18,
     },
 });

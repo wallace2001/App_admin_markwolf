@@ -6,13 +6,22 @@ import {AuthRouter} from './AuthRouter';
 import { useEffect } from 'react';
 import { RootStateOrAny, useDispatch, useSelector } from 'react-redux';
 import { infoUser } from '../store/action/auth.action';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const Router = () => {
     const dispatch = useDispatch();
     const {person} = useSelector((state: RootStateOrAny) => state.AuthReducer);
 
     useEffect(() => {
-        dispatch(infoUser());
+        const func = async() => {
+            const token = await AsyncStorage.getItem('@access_token:token');
+
+            if (token){
+                dispatch(infoUser());
+            }
+        };
+
+        func();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

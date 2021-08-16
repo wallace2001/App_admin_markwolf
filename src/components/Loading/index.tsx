@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
-import {StyleSheet, View, Text} from 'react-native';
+import {StyleSheet, View, ActivityIndicator} from 'react-native';
 import { RootStateOrAny, useSelector } from 'react-redux';
 
 export const Loading = () => {
@@ -10,7 +10,7 @@ export const Loading = () => {
     return (
         // eslint-disable-next-line react-native/no-inline-styles
         <View style={open ? styles.container : {display: 'none'}}>
-            <Text style={styles.title}>Carregando...</Text>
+            <ActivityIndicator color="#000" size="large" />
         </View>
     );
 };
@@ -21,9 +21,5 @@ const styles = StyleSheet.create({
         height: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    title: {
-        fontSize: 23,
-        fontFamily: 'Ubuntu-Bold',
     },
 });

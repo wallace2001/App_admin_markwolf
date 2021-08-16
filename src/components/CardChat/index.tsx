@@ -1,9 +1,8 @@
 /* eslint-disable prettier/prettier */
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Image, Text, View } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
@@ -41,15 +40,15 @@ export const CardChat = ({item, request, index, handleRemove}: Props) => {
             overshootRight={false}
             renderRightActions={() => (
                     <View style={styles.remove}>
-                        <RectButton
+                        <TouchableOpacity
                             onPress={() => handleRemove(item.id, item.user)}
                         >
                             <Icon name="trash" size={32} color="#fff" />
-                        </RectButton>
+                        </TouchableOpacity>
                     </View>
             )}
         >
-            <RectButton onPress={() => navigation.navigate('Speaking', item)} style={styles.chat}>
+            <TouchableOpacity activeOpacity={1.0} onPress={() => navigation.navigate('Speaking', item)} style={styles.chat}>
                 <View style={styles.profile}>
                     <Image style={styles.borderImage} source={BorderImage} />
                     <Image style={styles.profileImage} source={ProfileImage} />
@@ -64,7 +63,7 @@ export const CardChat = ({item, request, index, handleRemove}: Props) => {
                             'O cliente finalizou a conversa'
                         }</Text>
                 </View>
-            </RectButton>
+            </TouchableOpacity>
         </Swipeable>
     );
 };

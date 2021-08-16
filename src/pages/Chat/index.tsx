@@ -11,7 +11,6 @@ import socketio from 'socket.io-client';
 import { findMessage, finishConnection, updated } from '../../store/action/message.action';
 import { CardChat } from '../../components/CardChat';
 import { useNavigation } from '@react-navigation/native';
-import {LocalNotification} from '../../services/notification';
 
 interface MessageProps{
     text: string;
@@ -52,10 +51,9 @@ export const Chat = () => {
 
     //Conexão e recebimento das novas mensagens
     useEffect(() => {
-        (socket as any).current = socketio('http://172.24.48.1:3002', {transports: ['websocket']});
+        (socket as any).current = socketio('http://192.168.3.37:3002', {transports: ['websocket']});
 
-        (socket as any).current.on('new.join', (data: any, notification: any) => {
-            LocalNotification(notification.user, notification.message);
+        (socket as any).current.on('new.join', () => {
             HttpAuth.get('message_admin').then(res => {
                 if (!res.data.error){
                     setRequest(res.data);
@@ -72,11 +70,7 @@ export const Chat = () => {
 
     //Receber e atualizar as conversas
     useEffect(() => {
-        (socket as any).current.on('client.send.message', (notification: any) => {
-            console.log(notification);
-            if (notification.message.user_id !== person.id){
-                LocalNotification(notification.user, notification.message.text);
-            }
+        (socket as any).current.on('client.send.message', () => {
         });
         (socket as any).current.on('receive.message.admin', () => {
             HttpAuth.get('message_admin').then(res => {
@@ -122,7 +116,7 @@ export const Chat = () => {
         </View>
 
         <View style={styles.flatList}>
-            <FlatList 
+            <FlatList
                 data={request}
                 keyExtractor={({id}: any) => id}
                 style={styles.flatList}
@@ -153,6 +147,7 @@ const styles = StyleSheet.create({
         height: 120,
         paddingVertical: 20,
         paddingHorizontal: 20,
+        marginTop: 30,
         flexDirection: 'row',
         alignItems: 'center',
 

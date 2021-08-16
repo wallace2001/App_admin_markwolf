@@ -3,11 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 export const Http = axios.create({
-    baseURL: 'http://172.18.224.1:3002/',
+    baseURL: 'http://192.168.3.37:3002/',
 });
 
 export const HttpAuth = axios.create({
-    baseURL: 'http://172.18.224.1:3002/auth/',
+    baseURL: 'http://192.168.3.37:3002/auth/',
 });
 
 HttpAuth.interceptors.request.use(
